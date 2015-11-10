@@ -1,6 +1,7 @@
 
 
 import java.io.*;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -8,43 +9,42 @@ public class Client implements Runnable {
 
     private String hostName;
     private int portNumber;
+    private int serverPortNumber;
+
     private Socket clientSocket;
     private PrintWriter clientOutputPrintWriter;
     private BufferedReader serverResponseReader;
     private BufferedReader clientStdin;
     private Thread clientReadingThread, clientWritingThread;
-    private String name;
+    private Thread serverListener,console;
+
+    private BufferedReader inFromSocketReader;
+    private PrintWriter outFromSocketPrinter;
+    private BufferedReader ConsoleReader;
 
     public static void main(String args[]) {
         new Client();
     }
-
+    BufferedReader connectionInfoReader = new BufferedReader(
+            new InputStreamReader(System.in));
     public Client() {
-        BufferedReader connectionInfoReader = new BufferedReader(
+        BufferedReader ConsoleReader = new BufferedReader(
                 new InputStreamReader(System.in));
         try {
-            System.out.println("Please Enter the port number :");
-            portNumber = Integer.parseInt(connectionInfoReader.readLine());
-            System.out.println("Please Enter the hostname :");
-            hostName = connectionInfoReader.readLine();
 
-            // The clientReadingThread is reading the
-            // server's response message
-            clientReadingThread = new Thread(this);
-            clientWritingThread = new Thread(this);
-            // The clientWritingThread is writing the
-            // client's stding to the server
-            clientWritingThread = new Thread(this);
+            clientReadingThread = new Thread(this);// reads what the client write
+            clientWritingThread = new Thread(this);// writes what other client sends
+            serverListener = new Thread(this);//listens for call requests
+            console = new Thread(this);
 
-            System.out.print("Please Enter username :\n");
-            String username = connectionInfoReader.readLine().trim();
-            this.join(username);
+
+            serverListener.start();
 
         } catch (NumberFormatException e) {
             System.err.print("Port Number invalid");
             e.printStackTrace();
             System.exit(1);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -52,8 +52,7 @@ public class Client implements Runnable {
     /**
      * Joining the server using my username
      *
-     * @param name
-     *            the client's <strong>Unique</strong> name
+     * @param name the client's <strong>Unique</strong> name
      */
     public void join(String name) {
         try {
@@ -66,7 +65,7 @@ public class Client implements Runnable {
                     clientSocket.getInputStream()));
             clientStdin = new BufferedReader(new InputStreamReader(System.in));
 
-            this.name = name;
+            //this.name = name;
             clientOutputPrintWriter.println(name);
 
             clientReadingThread.start();
@@ -81,10 +80,54 @@ public class Client implements Runnable {
             e.printStackTrace();
         }
     }
+    public void call() {
+        try {
 
+            System.out.println("Please Enter the port number :");
+            portNumber = Integer.parseInt(connectionInfoReader.readLine());
+            System.out.println("Please Enter the hostname/IP address :");
+            hostName = connectionInfoReader.readLine();
+            System.out.println("checking ....");
+            //create a socket with the server
+            clientSocket = new Socket(hostName, portNumber);
+            System.out.println("he is online");
+
+            clientOutputPrintWriter = new PrintWriter(
+                    clientSocket.getOutputStream(), true);
+            serverResponseReader = new BufferedReader(new InputStreamReader(
+                    clientSocket.getInputStream()));
+            clientStdin = new BufferedReader(new InputStreamReader(System.in));
+
+            System.out.print("Please Enter username :\n");
+            String username = connectionInfoReader.readLine().trim();
+            clientOutputPrintWriter.println(username);
+            clientOutputPrintWriter.println(clientSocket.getInetAddress().toString());
+            clientOutputPrintWriter.println(serverPortNumber);
+
+
+            int msgResponse = Integer.parseInt(serverResponseReader.readLine().trim());
+            if(msgResponse == 1) {
+                System.out.println("he is welling to take your call");
+            }
+            else if(msgResponse == 2){
+                System.out.println("sorry .. he cancelled");
+            }
+            //clientReadingThread.start();
+            //clientWritingThread.start();
+
+        } catch (UnknownHostException e) {
+            System.err.printf("Can't get Host [%s]", hostName);
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.printf("Couldn't get I/O for the connection to [%s]",
+                    hostName);
+            e.printStackTrace();
+        }
+    }
     @Override
     public void run() {
         try {
+            //-----------------clientReadingThread----------------------------
             if (Thread.currentThread() == clientReadingThread) {
                 String messageFromServer;
                 do {
@@ -93,16 +136,74 @@ public class Client implements Runnable {
                 } while (!((messageFromServer.equals("BYE") || messageFromServer
                         .equals("QUIT"))));
 
-            } else {
+            }
+            //-----------------clientwritingThread----------------------------
+            else if (Thread.currentThread() == clientWritingThread) {
 
                 String messageToServer;
                 do {
                     messageToServer = clientStdin.readLine();
+                    System.out.println("msg is : " + messageToServer);
                     clientOutputPrintWriter.println(messageToServer);
                 } while (!((messageToServer.equals("BYE") || messageToServer
                         .equals("QUIT"))));
             }
-        } catch (Exception ignored) {
+            //-----------------server listener ----------------------------
+            else if (Thread.currentThread() == serverListener) {
+                System.out.println("Please Enter the port number that you would like to listen too:");
+                serverPortNumber = Integer.parseInt(connectionInfoReader.readLine());
+                ServerSocket welcomingSocket = new ServerSocket(serverPortNumber);
+                System.out.println("you are now listening to port [ " + serverPortNumber + " ]" );
+                System.out.println("if you want to call anyone just type call");
+                console.start();
+                while (true) {
+
+                    Socket otherEndSocket = welcomingSocket.accept();
+                    System.out.println("some User connected");
+                    inFromSocketReader = new BufferedReader(new InputStreamReader(
+                            otherEndSocket.getInputStream()));
+                    outFromSocketPrinter = new PrintWriter(
+                            otherEndSocket.getOutputStream(), true);
+
+                    String username = inFromSocketReader.readLine();
+                    String ip = inFromSocketReader.readLine();
+                    portNumber = Integer.parseInt(inFromSocketReader.readLine());
+
+                    System.out.println("user + [ "+ username +" ] would like to call you " );
+
+                    System.out.println("would you like to take this call" );
+                    while (true){
+                        System.out.println("press 1 for yes or 2 for no" );
+                        int response = Integer.parseInt(connectionInfoReader.readLine().trim());
+                        if(response == 1 || response == 2)
+                        {
+                            outFromSocketPrinter.println(response);
+                            break;
+                        }
+                        else
+                        {
+                            System.out.println("not a correct code ");
+                        }
+                    }
+
+
+                }
+            }
+            //----------------- commands listener ----------------------------
+            else if (Thread.currentThread() == console) {
+                String msg;
+                while (true) {
+                    msg = connectionInfoReader.readLine().trim();
+                    if (msg.equals("call")){
+                        call();
+                        break;
+                    }
+                    else
+                        System.out.println("not a known command");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             /*Utilities.cleanResources(clientOutputPrintWriter, clientSocket,
                     clientStdin, serverResponseReader);
