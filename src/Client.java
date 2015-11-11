@@ -63,6 +63,7 @@ public class Client extends JFrame implements Runnable {
         getContentPane().setBackground(Color.white);
         setVisible(true);
     }
+
     public void initialize() {
 
         BufferedReader ConsoleReader = new BufferedReader(
@@ -84,10 +85,11 @@ public class Client extends JFrame implements Runnable {
             e.printStackTrace();
         }
     }
-    public static void infoBox(String infoMessage, String titleBar)
-    {
+
+    public static void infoBox(String infoMessage, String titleBar) {
         JOptionPane.showMessageDialog(null, infoMessage, "InfoBox: " + titleBar, JOptionPane.INFORMATION_MESSAGE);
     }
+
     /**
      * Joining the server using my username
      *
@@ -120,7 +122,7 @@ public class Client extends JFrame implements Runnable {
 
             int msgResponse = Integer.parseInt(serverResponseReader.readLine().trim());
             if (msgResponse == 1) {
-                infoBox("he is welling to take your call",":D");
+                infoBox("he is welling to take your call", ":D");
                 new VUServer().runVOIP(9786);
                 new VUClient(8786, 9786, "localhost").captureAudio();
 
@@ -189,29 +191,21 @@ public class Client extends JFrame implements Runnable {
                     System.out.println("user + [ " + username + " ] would like to call you ");
                     int n = JOptionPane.showConfirmDialog(
                             this,
-                            "user + [ \" + username + \" ] would like to call you  , Would you like to answer?",
+                            "user + [ " + username + " ] would like to call you  , Would you like to answer?",
                             "incoming call",
                             JOptionPane.YES_NO_OPTION);
-                    int response = n==JOptionPane.YES_OPTION?1:2;
+                    int response = n == JOptionPane.YES_OPTION ? 1 : 2;
+                    System.out.println(response);
                     waitingInput = true;
-                    while (true) {
-                        try {
-                            if (msgModified) {
-                                response = Integer.parseInt(lastMsg);
-                                msgModified = false;
-                                if (response == 1 || response == 2) {
-                                    outFromSocketPrinter.println(response);
-                                    new VUServer().runVOIP(7786);
-                                    new VUClient(6786, 7786, "localhost").captureAudio();
-                                    waitingInput = false;
-                                    break;
-                                } else {
-                                    System.out.println("not a correct code ");
-                                }
-                            }
-                        } catch (Exception e) {
 
-                        }
+                    if (response == 1 || response == 2) {
+                        outFromSocketPrinter.println(response);
+                        new VUServer().runVOIP(7786);
+                        new VUClient(6786, 7786, "localhost").captureAudio();
+                        waitingInput = false;
+                        break;
+                    } else {
+                        System.out.println("not a correct code ");
                     }
                 }
 
