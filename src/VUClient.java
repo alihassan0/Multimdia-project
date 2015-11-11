@@ -14,12 +14,17 @@ public class VUClient extends JFrame {
     AudioInputStream InputStream;
     SourceDataLine sourceLine;
     Graphics g;
-
+    int portNumber;
+    int serverPortNumber;
+    String ipAddress;
     public static void main(String args[]) {
-        new VUClient();
+        new VUClient(8786,9786,"localhost");
     }
 
-    public VUClient() {
+    public VUClient(int portNumber,int serverPortNumber,String ipAddress ) {
+        this.portNumber = portNumber;
+        this.ipAddress = ipAddress;
+        this.serverPortNumber = serverPortNumber;
         final JButton capture = new JButton("Capture");
         final JButton stop = new JButton("Stop");
         final JButton play = new JButton("Playback");
@@ -67,7 +72,7 @@ public class VUClient extends JFrame {
         g = (Graphics) this.getGraphics();
     }
 
-    private void captureAudio() {
+    public void captureAudio() {
         try {
             adFormat = getAudioFormat();
             DataLine.Info dataLineInfo = new DataLine.Info(TargetDataLine.class, adFormat);
@@ -76,6 +81,7 @@ public class VUClient extends JFrame {
             targetDataLine.start();
 
             Thread captureThread = new Thread(new CaptureThread());
+            System.out.println("Capturing started");
             captureThread.start();
         } catch (Exception e) {
             StackTraceElement stackEle[] = e.getStackTrace();
@@ -122,12 +128,12 @@ public class VUClient extends JFrame {
             byteOutputStream = new ByteArrayOutputStream();
             stopaudioCapture = false;
             try {
-                DatagramSocket clientSocket = new DatagramSocket(8786);
-                InetAddress IPAddress = InetAddress.getByName("127.0.0.1");
+                DatagramSocket clientSocket = new DatagramSocket(portNumber);
+                InetAddress IPAddress = InetAddress.getByName(ipAddress);
                 while (!stopaudioCapture) {
                     int cnt = targetDataLine.read(tempBuffer, 0, tempBuffer.length);
                     if (cnt > 0) {
-                        DatagramPacket sendPacket = new DatagramPacket(tempBuffer, tempBuffer.length, IPAddress, 9786);
+                        DatagramPacket sendPacket = new DatagramPacket(tempBuffer, tempBuffer.length, IPAddress,9786);
                         clientSocket.send(sendPacket);
                         byteOutputStream.write(tempBuffer, 0, cnt);
                     }

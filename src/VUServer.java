@@ -21,12 +21,13 @@ public class VUServer {
     }
 
     public static void main(String args[]) {
-        new VUServer().runVOIP();
+        new VUServer().runVOIP(9786);
     }
 
-    public void runVOIP() {
+    public void runVOIP(int portNumber) {
         try {
-            DatagramSocket serverSocket = new DatagramSocket(9786);
+            DatagramSocket serverSocket = new DatagramSocket(portNumber);
+            System.out.println("server is running");
             byte[] receiveData = new byte[10000];
             while (true) {
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
@@ -63,6 +64,7 @@ public class VUServer {
                 while ((cnt = InputStream.read(tempBuffer, 0, tempBuffer.length)) != -1) {
                     if (cnt > 0) {
                         sourceLine.write(tempBuffer, 0, cnt);
+
                     }
                 }
                 //  sourceLine.drain();
@@ -76,7 +78,6 @@ public class VUServer {
     class CaptureThread extends Thread {
 
         byte tempBuffer[] = new byte[10000];
-
         public void run() {
 
             byteOutputStream = new ByteArrayOutputStream();

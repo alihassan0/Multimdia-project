@@ -16,17 +16,23 @@ public class Client implements Runnable {
     private BufferedReader serverResponseReader;
     private BufferedReader clientStdin;
     private Thread clientReadingThread, clientWritingThread;
-    private Thread serverListener,console;
+    private Thread serverListener, console;
 
     private BufferedReader inFromSocketReader;
     private PrintWriter outFromSocketPrinter;
     private BufferedReader ConsoleReader;
 
+    private String lastMsg = "";
+    private Boolean msgModified = false;
+    private boolean waitingInput = false;
+
     public static void main(String args[]) {
         new Client();
     }
+
     BufferedReader connectionInfoReader = new BufferedReader(
             new InputStreamReader(System.in));
+
     public Client() {
         BufferedReader ConsoleReader = new BufferedReader(
                 new InputStreamReader(System.in));
@@ -54,32 +60,6 @@ public class Client implements Runnable {
      *
      * @param name the client's <strong>Unique</strong> name
      */
-    public void join(String name) {
-        try {
-
-            clientSocket = new Socket(hostName, portNumber);
-
-            clientOutputPrintWriter = new PrintWriter(
-                    clientSocket.getOutputStream(), true);
-            serverResponseReader = new BufferedReader(new InputStreamReader(
-                    clientSocket.getInputStream()));
-            clientStdin = new BufferedReader(new InputStreamReader(System.in));
-
-            //this.name = name;
-            clientOutputPrintWriter.println(name);
-
-            clientReadingThread.start();
-            clientWritingThread.start();
-
-        } catch (UnknownHostException e) {
-            System.err.printf("Can't get Host [%s]", hostName);
-            e.printStackTrace();
-        } catch (IOException e) {
-            System.err.printf("Couldn't get I/O for the connection to [%s]",
-                    hostName);
-            e.printStackTrace();
-        }
-    }
     public void call() {
         try {
 
@@ -106,11 +86,15 @@ public class Client implements Runnable {
 
 
             int msgResponse = Integer.parseInt(serverResponseReader.readLine().trim());
-            if(msgResponse == 1) {
+            if (msgResponse == 1) {
                 System.out.println("he is welling to take your call");
-            }
-            else if(msgResponse == 2){
+                new VUServer().runVOIP(9786);
+                new VUClient(8786, 9786, "localhost").captureAudio();
+
+            } else if (msgResponse == 2) {
                 System.out.println("sorry .. he cancelled");
+            } else {
+                System.out.println("._.");
             }
             //clientReadingThread.start();
             //clientWritingThread.start();
@@ -124,6 +108,7 @@ public class Client implements Runnable {
             e.printStackTrace();
         }
     }
+
     @Override
     public void run() {
         try {
@@ -153,7 +138,7 @@ public class Client implements Runnable {
                 System.out.println("Please Enter the port number that you would like to listen too:");
                 serverPortNumber = Integer.parseInt(connectionInfoReader.readLine());
                 ServerSocket welcomingSocket = new ServerSocket(serverPortNumber);
-                System.out.println("you are now listening to port [ " + serverPortNumber + " ]" );
+                System.out.println("you are now listening to port [ " + serverPortNumber + " ]");
                 System.out.println("if you want to call anyone just type call");
                 console.start();
                 while (true) {
@@ -169,37 +154,49 @@ public class Client implements Runnable {
                     String ip = inFromSocketReader.readLine();
                     portNumber = Integer.parseInt(inFromSocketReader.readLine());
 
-                    System.out.println("user + [ "+ username +" ] would like to call you " );
+                    System.out.println("user + [ " + username + " ] would like to call you ");
 
-                    System.out.println("would you like to take this call" );
-                    while (true){
-                        System.out.println("press 1 for yes or 2 for no" );
-                        int response = Integer.parseInt(connectionInfoReader.readLine().trim());
-                        if(response == 1 || response == 2)
-                        {
-                            outFromSocketPrinter.println(response);
-                            break;
-                        }
-                        else
-                        {
-                            System.out.println("not a correct code ");
+                    System.out.println("would you like to take this call");
+                    System.out.println("press 1 for yes or 2 for no");
+                    int response = 0;
+                    waitingInput = true;
+                    while (true) {
+                        try {
+                            if (msgModified) {
+                                response = Integer.parseInt(lastMsg);
+                                msgModified = false;
+                                if (response == 1 || response == 2) {
+                                    outFromSocketPrinter.println(response);
+                                    new VUServer().runVOIP(7786);
+                                    new VUClient(6786, 7786, "localhost").captureAudio();
+                                    waitingInput = false;
+                                    break;
+                                } else {
+                                    System.out.println("not a correct code ");
+                                }
+                            }
+                        } catch (Exception e) {
+
                         }
                     }
-
-
                 }
+
             }
             //----------------- commands listener ----------------------------
             else if (Thread.currentThread() == console) {
                 String msg;
                 while (true) {
                     msg = connectionInfoReader.readLine().trim();
-                    if (msg.equals("call")){
+                    if (msg.equals("call")) {
                         call();
                         break;
-                    }
-                    else
+                    } else if (waitingInput) {
+                        lastMsg = msg;
+                        msgModified = true;
+                    } else {
                         System.out.println("not a known command");
+
+                    }
                 }
             }
         } catch (Exception e) {
