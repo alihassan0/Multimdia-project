@@ -1,11 +1,15 @@
 
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class Client implements Runnable {
+public class Client extends JFrame implements Runnable {
 
     private String hostName;
     private int portNumber;
@@ -34,10 +38,36 @@ public class Client implements Runnable {
             new InputStreamReader(System.in));
 
     public Client() {
+        initialize();
+        initializeWindow();
+    }
+
+    public void initializeWindow() {
+
+        final JButton call = new JButton("Call");
+
+        call.setEnabled(true);
+
+        call.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                call.setEnabled(false);
+                call();
+            }
+        });
+        getContentPane().add(call);
+
+        getContentPane().setLayout(new FlowLayout());
+        setTitle("Capture/Playback Demo");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(400, 100);
+        getContentPane().setBackground(Color.white);
+        setVisible(true);
+    }
+    public void initialize() {
+
         BufferedReader ConsoleReader = new BufferedReader(
                 new InputStreamReader(System.in));
         try {
-
             clientReadingThread = new Thread(this);// reads what the client write
             clientWritingThread = new Thread(this);// writes what other client sends
             serverListener = new Thread(this);//listens for call requests
@@ -54,7 +84,10 @@ public class Client implements Runnable {
             e.printStackTrace();
         }
     }
-
+    public static void infoBox(String infoMessage, String titleBar)
+    {
+        JOptionPane.showMessageDialog(null, infoMessage, "InfoBox: " + titleBar, JOptionPane.INFORMATION_MESSAGE);
+    }
     /**
      * Joining the server using my username
      *
@@ -63,10 +96,11 @@ public class Client implements Runnable {
     public void call() {
         try {
 
-            System.out.println("Please Enter the port number :");
-            portNumber = Integer.parseInt(connectionInfoReader.readLine());
+            //System.out.println("Please Enter the port number :");
+            portNumber = 5050;
             System.out.println("Please Enter the hostname/IP address :");
-            hostName = connectionInfoReader.readLine();
+            hostName = JOptionPane.showInputDialog("Please Enter the hostname/IP address :", "192.168.1.2");
+            //hostName = connectionInfoReader.readLine();
             System.out.println("checking ....");
             //create a socket with the server
             clientSocket = new Socket(hostName, portNumber);
@@ -78,8 +112,7 @@ public class Client implements Runnable {
                     clientSocket.getInputStream()));
             clientStdin = new BufferedReader(new InputStreamReader(System.in));
 
-            System.out.print("Please Enter username :\n");
-            String username = connectionInfoReader.readLine().trim();
+            String username = JOptionPane.showInputDialog("Please Enter username :", "ali");
             clientOutputPrintWriter.println(username);
             clientOutputPrintWriter.println(clientSocket.getInetAddress().toString());
             clientOutputPrintWriter.println(serverPortNumber);
@@ -87,12 +120,12 @@ public class Client implements Runnable {
 
             int msgResponse = Integer.parseInt(serverResponseReader.readLine().trim());
             if (msgResponse == 1) {
-                System.out.println("he is welling to take your call");
+                infoBox("he is welling to take your call",":D");
                 new VUServer().runVOIP(9786);
                 new VUClient(8786, 9786, "localhost").captureAudio();
 
             } else if (msgResponse == 2) {
-                System.out.println("sorry .. he cancelled");
+                infoBox("user busy", ":D");
             } else {
                 System.out.println("._.");
             }
@@ -136,7 +169,7 @@ public class Client implements Runnable {
             //-----------------server listener ----------------------------
             else if (Thread.currentThread() == serverListener) {
                 System.out.println("Please Enter the port number that you would like to listen too:");
-                serverPortNumber = Integer.parseInt(connectionInfoReader.readLine());
+                serverPortNumber = 5050;
                 ServerSocket welcomingSocket = new ServerSocket(serverPortNumber);
                 System.out.println("you are now listening to port [ " + serverPortNumber + " ]");
                 System.out.println("if you want to call anyone just type call");
@@ -153,12 +186,13 @@ public class Client implements Runnable {
                     String username = inFromSocketReader.readLine();
                     String ip = inFromSocketReader.readLine();
                     portNumber = Integer.parseInt(inFromSocketReader.readLine());
-
                     System.out.println("user + [ " + username + " ] would like to call you ");
-
-                    System.out.println("would you like to take this call");
-                    System.out.println("press 1 for yes or 2 for no");
-                    int response = 0;
+                    int n = JOptionPane.showConfirmDialog(
+                            this,
+                            "user + [ \" + username + \" ] would like to call you  , Would you like to answer?",
+                            "incoming call",
+                            JOptionPane.YES_NO_OPTION);
+                    int response = n==JOptionPane.YES_OPTION?1:2;
                     waitingInput = true;
                     while (true) {
                         try {
