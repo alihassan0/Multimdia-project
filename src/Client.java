@@ -30,6 +30,8 @@ public class Client extends JFrame implements Runnable {
     private Boolean msgModified = false;
     private boolean waitingInput = false;
 
+    private int mediaServerPort = 9786;
+    private int mediaClientPort = 8786;
     public static void main(String args[]) {
         new Client();
     }
@@ -123,8 +125,8 @@ public class Client extends JFrame implements Runnable {
             int msgResponse = Integer.parseInt(serverResponseReader.readLine().trim());
             if (msgResponse == 1) {
                 infoBox("he is welling to take your call", ":D");
-                new VUServer().runVOIP(9786);
-                new VUClient(8786, 9786, "localhost").captureAudio();
+                new VUServer().runVOIP(mediaServerPort);
+                new VUClient(mediaClientPort, mediaServerPort, hostName).captureAudio();
 
             } else if (msgResponse == 2) {
                 infoBox("user busy", ":D");
@@ -200,8 +202,9 @@ public class Client extends JFrame implements Runnable {
 
                     if (response == 1 || response == 2) {
                         outFromSocketPrinter.println(response);
-                        new VUServer().runVOIP(7786);
-                        new VUClient(6786, 7786, "localhost").captureAudio();
+                        new VUServer().runVOIP(mediaServerPort);
+                        new VUClient(mediaClientPort, mediaServerPort, ip).captureAudio();
+                        System.out.println(ip);
                         waitingInput = false;
                         break;
                     } else {

@@ -5,7 +5,7 @@ import java.io.*;
 import java.net.*;
 import javax.sound.sampled.*;
 
-public class VUClient extends JFrame {
+public class VUClient{
 
     boolean stopaudioCapture = false;
     ByteArrayOutputStream byteOutputStream;
@@ -25,51 +25,6 @@ public class VUClient extends JFrame {
         this.portNumber = portNumber;
         this.ipAddress = ipAddress;
         this.serverPortNumber = serverPortNumber;
-        final JButton capture = new JButton("Capture");
-        final JButton stop = new JButton("Stop");
-        final JButton play = new JButton("Playback");
-
-        capture.setEnabled(true);
-        stop.setEnabled(false);
-        play.setEnabled(false);
-
-        capture.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                capture.setEnabled(false);
-                stop.setEnabled(true);
-                play.setEnabled(false);
-                captureAudio();
-            }
-        });
-        getContentPane().add(capture);
-
-        stop.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                capture.setEnabled(true);
-                stop.setEnabled(false);
-                play.setEnabled(true);
-                stopaudioCapture = true;
-                targetDataLine.close();
-            }
-        });
-        getContentPane().add(stop);
-
-        play.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                playAudio();
-            }
-        });
-        getContentPane().add(play);
-
-        getContentPane().setLayout(new FlowLayout());
-        setTitle("Capture/Playback Demo");
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(400, 100);
-        getContentPane().setBackground(Color.white);
-        setVisible(true);
-
-        g = (Graphics) this.getGraphics();
     }
 
     public void captureAudio() {
