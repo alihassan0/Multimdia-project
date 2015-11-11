@@ -203,8 +203,8 @@ public class Client extends JFrame implements Runnable {
                     if (response == 1 || response == 2) {
                         outFromSocketPrinter.println(response);
                         new VUServer().runVOIP(mediaServerPort);
-                        new VUClient(mediaClientPort, mediaServerPort, ip).captureAudio();
-                        System.out.println(ip);
+                        new VUClient(mediaClientPort, mediaServerPort, otherEndSocket.getInetAddress().toString()).captureAudio();
+                        System.out.println(otherEndSocket.getInetAddress().toString());
                         waitingInput = false;
                         break;
                     } else {
