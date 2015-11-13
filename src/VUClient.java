@@ -100,7 +100,6 @@ public class VUClient{
             }
         }
     }
-
     class PlayThread extends Thread {
 
         byte tempBuffer[] = new byte[10000];
@@ -111,13 +110,46 @@ public class VUClient{
                 while ((cnt = InputStream.read(tempBuffer, 0, tempBuffer.length)) != -1) {
                     if (cnt > 0) {
                         sourceLine.write(tempBuffer, 0, cnt);
+
                     }
                 }
-                //                sourceLine.drain();
-                //             sourceLine.close();
+                //sourceLine.drain();
+                //sourceLine.close();
             } catch (Exception e) {
                 System.out.println(e);
                 System.exit(0);
+            }
+        }
+    }
+    class RecieveThread extends Thread {
+        public void run() {
+            try {
+                DatagramSocket serverSocket = new DatagramSocket(portNumber);
+                System.out.println("server is running");
+                byte[] receiveData = new byte[10000];
+                while (true) {
+                    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                    serverSocket.receive(receivePacket);
+                    System.out.println("RECEIVED: " + receivePacket.getAddress().getHostAddress() + " " + receivePacket.getPort());
+                    try {
+                        byte audioData[] = receivePacket.getData();
+                        InputStream byteInputStream = new ByteArrayInputStream(audioData);
+                        AudioFormat adFormat = getAudioFormat();
+                        InputStream = new AudioInputStream(byteInputStream, adFormat, audioData.length / adFormat.getFrameSize());
+                        DataLine.Info dataLineInfo = new DataLine.Info(SourceDataLine.class, adFormat);
+                        sourceLine = (SourceDataLine) AudioSystem.getLine(dataLineInfo);
+                        sourceLine.open(adFormat);
+                        sourceLine.start();
+                        Thread playThread = new Thread(new PlayThread());
+                        playThread.start();
+                    } catch (Exception e) {
+                        System.out.println(e);
+                        System.out.println("btngan");
+                        System.exit(0);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }

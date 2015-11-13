@@ -4,12 +4,8 @@ import javax.sound.sampled.*;
 
 public class VUServer {
 
-    ByteArrayOutputStream byteOutputStream;
-    AudioFormat adFormat;
-    TargetDataLine targetDataLine;
     AudioInputStream InputStream;
     SourceDataLine sourceLine;
-    boolean stopaudioCapture = false;
     int portNumber;
     private AudioFormat getAudioFormat() {
         float sampleRate = 16000.0F;
@@ -75,6 +71,7 @@ public class VUServer {
                         playThread.start();
                     } catch (Exception e) {
                         System.out.println(e);
+                        System.out.println("btngan");
                         System.exit(0);
                     }
                 }
@@ -82,6 +79,5 @@ public class VUServer {
                 e.printStackTrace();
             }
         }
-
     }
 }

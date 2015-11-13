@@ -105,9 +105,7 @@ public class Client extends JFrame implements Runnable {
             int msgResponse = Integer.parseInt(serverResponseReader.readLine().trim());
             if (msgResponse == 1) {
                 infoBox("he is welling to take your call", ":D");
-                new VUServer().runVOIP(mediaServerPort);
-                new VUClient(mediaClientPort, mediaServerPort, hostName).captureAudio();
-
+                new VoipUser(mediaClientPort,mediaServerPort,hostName);
             } else if (msgResponse == 2) {
                 infoBox("user busy", ":D");
             } else {
@@ -162,8 +160,7 @@ public class Client extends JFrame implements Runnable {
 
                     outFromSocketPrinter.println(response);
                     if (response == 1) {
-                        new VUServer().runVOIP(mediaServerPort);
-                        new VUClient(mediaClientPort, mediaServerPort, otherEndSocket.getInetAddress().toString().substring(1)).captureAudio();
+                        new VoipUser(mediaClientPort,mediaServerPort,otherEndSocket.getInetAddress().toString().substring(1));
                         System.out.println(otherEndSocket.getInetAddress().toString());
                         break;
                     } else {
