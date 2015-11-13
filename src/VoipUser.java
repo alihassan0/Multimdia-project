@@ -13,10 +13,6 @@ public class VoipUser {
     int portNumber;
     int serverPortNumber;
     String ipAddress;
-    public static void main(String args[]) {
-
-    }
-
     public VoipUser(int portNumber,int serverPortNumber,String ipAddress ) {
         this.portNumber = portNumber;
         this.ipAddress = ipAddress;
@@ -24,7 +20,6 @@ public class VoipUser {
         runVOIP();
         captureAudio();
     }
-
     public void captureAudio() {
         try {
             adFormat = getAudioFormat();
@@ -56,7 +51,6 @@ public class VoipUser {
         boolean bigEndian = false;
         return new AudioFormat(sampleRate, sampleInbits, channels, signed, bigEndian);
     }
-
     class CaptureThread extends Thread {
 
         byte tempBuffer[] = new byte[10000];
@@ -83,7 +77,6 @@ public class VoipUser {
             }
         }
     }
-
     class PlayThread extends Thread {
 
         byte tempBuffer[] = new byte[10000];
@@ -96,8 +89,7 @@ public class VoipUser {
                         sourceLine.write(tempBuffer, 0, cnt);
                     }
                 }
-                //                sourceLine.drain();
-                //             sourceLine.close();
+
             } catch (Exception e) {
                 System.out.println(e);
                 System.exit(0);
@@ -128,7 +120,7 @@ public class VoipUser {
                     } catch (Exception e) {
                         System.out.println(e);
                         System.out.println("btngan");
-                        System.exit(0);
+                        sourceLine.close();
                     }
                 }
             } catch (Exception e) {

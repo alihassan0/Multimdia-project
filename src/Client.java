@@ -1,5 +1,3 @@
-
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -23,7 +21,6 @@ public class Client extends JFrame implements Runnable {
 
     private BufferedReader inFromSocketReader;
     private PrintWriter outFromSocketPrinter;
-
 
     private int mediaServerPort = 9786;
     private int mediaClientPort = 8786;
@@ -70,7 +67,6 @@ public class Client extends JFrame implements Runnable {
         console = new Thread(this);
 
         serverListener.start();
-
     }
 
     //just a handy function to print stuff to the screen
@@ -80,7 +76,6 @@ public class Client extends JFrame implements Runnable {
 
     public void call() {
         try {
-
             portNumber = 5050;
             System.out.println("Please Enter the hostname/IP address :");
             hostName = JOptionPane.showInputDialog("Please Enter the hostname/IP address :", "192.168.1.2");
@@ -101,17 +96,15 @@ public class Client extends JFrame implements Runnable {
             clientOutputPrintWriter.println(clientSocket.getInetAddress().toString());
             clientOutputPrintWriter.println(serverPortNumber);
 
-
             int msgResponse = Integer.parseInt(serverResponseReader.readLine().trim());
             if (msgResponse == 1) {
                 infoBox("he is welling to take your call", ":D");
-                new VoipUser(mediaClientPort,mediaServerPort,hostName);
+                new VoipUser(mediaClientPort, mediaServerPort, hostName);
             } else if (msgResponse == 2) {
                 infoBox("user busy", ":D");
             } else {
                 System.out.println("._.");
             }
-
         } catch (UnknownHostException e) {
             System.err.printf("Can't get Host [%s]", hostName);
             e.printStackTrace();
@@ -121,7 +114,6 @@ public class Client extends JFrame implements Runnable {
             e.printStackTrace();
         }
     }
-
     @Override
     public void run() {
 
@@ -135,10 +127,8 @@ public class Client extends JFrame implements Runnable {
                     infoBox("sorry .. please close all other instances of this program", "the port is already in use");
                     System.exit(0);
                 }
-
                 console.start();
                 while (true) {
-
                     Socket otherEndSocket = welcomingSocket.accept();
                     System.out.println("some User connected");
                     inFromSocketReader = new BufferedReader(new InputStreamReader(
@@ -157,10 +147,9 @@ public class Client extends JFrame implements Runnable {
                             JOptionPane.YES_NO_OPTION);
                     int response = n == JOptionPane.YES_OPTION ? 1 : 2;
                     System.out.println(response);
-
                     outFromSocketPrinter.println(response);
                     if (response == 1) {
-                        new VoipUser(mediaClientPort,mediaServerPort,otherEndSocket.getInetAddress().toString().substring(1));
+                        new VoipUser(mediaClientPort, mediaServerPort, otherEndSocket.getInetAddress().toString().substring(1));
                         System.out.println(otherEndSocket.getInetAddress().toString());
                         break;
                     } else {
@@ -174,7 +163,7 @@ public class Client extends JFrame implements Runnable {
         }
         //----------------- console listener ----------------------------
         else if (Thread.currentThread() == console) {
-            try{
+            try {
                 String msg;
                 while (true) {
                     msg = connectionInfoReader.readLine().trim();
@@ -185,15 +174,12 @@ public class Client extends JFrame implements Runnable {
 
                     } else {
                         System.out.println("not a known command");
-
                     }
                 }
-            }catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
-                infoBox("console error","error");
-
+                infoBox("console error", "error");
             }
         }
-
     }
 }
