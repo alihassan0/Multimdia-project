@@ -19,16 +19,11 @@ public class Client extends JFrame implements Runnable {
     private PrintWriter clientOutputPrintWriter;
     private BufferedReader serverResponseReader;
     private BufferedReader clientStdin;
-    private Thread clientReadingThread, clientWritingThread;
     private Thread serverListener, console;
 
     private BufferedReader inFromSocketReader;
     private PrintWriter outFromSocketPrinter;
-    private BufferedReader ConsoleReader;
 
-    private String lastMsg = "";
-    private Boolean msgModified = false;
-    private boolean waitingInput = false;
 
     private int mediaServerPort = 9786;
     private int mediaClientPort = 8786;
@@ -40,8 +35,8 @@ public class Client extends JFrame implements Runnable {
             new InputStreamReader(System.in));
 
     public Client() {
-        initialize();
         initializeWindow();
+        initialize();
     }
 
     public void initializeWindow() {
@@ -70,37 +65,19 @@ public class Client extends JFrame implements Runnable {
 
         BufferedReader ConsoleReader = new BufferedReader(
                 new InputStreamReader(System.in));
-        try {
-            clientReadingThread = new Thread(this);// reads what the client write
-            clientWritingThread = new Thread(this);// writes what other client sends
-            serverListener = new Thread(this);//listens for call requests
-            console = new Thread(this);
+        serverListener = new Thread(this);//listens for call requests
+        console = new Thread(this);
 
+        serverListener.start();
 
-            serverListener.start();
-
-        } catch (NumberFormatException e) {
-            System.err.print("Port Number invalid");
-            e.printStackTrace();
-            System.exit(1);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
-
+    //just a handy function to print stuff to the screen
     public static void infoBox(String infoMessage, String titleBar) {
         JOptionPane.showMessageDialog(null, infoMessage, "InfoBox: " + titleBar, JOptionPane.INFORMATION_MESSAGE);
     }
-
-    /**
-     * Joining the server using my username
-     *
-     * @param name the client's <strong>Unique</strong> name
-     */
     public void call() {
         try {
 
-            //System.out.println("Please Enter the port number :");
             portNumber = 5050;
             System.out.println("Please Enter the hostname/IP address :");
             hostName = JOptionPane.showInputDialog("Please Enter the hostname/IP address :", "192.168.1.2");
@@ -133,8 +110,6 @@ public class Client extends JFrame implements Runnable {
             } else {
                 System.out.println("._.");
             }
-            //clientReadingThread.start();
-            //clientWritingThread.start();
 
         } catch (UnknownHostException e) {
             System.err.printf("Can't get Host [%s]", hostName);
@@ -149,32 +124,16 @@ public class Client extends JFrame implements Runnable {
     @Override
     public void run() {
         try {
-            //-----------------clientReadingThread----------------------------
-            if (Thread.currentThread() == clientReadingThread) {
-                String messageFromServer;
-                do {
-                    messageFromServer = serverResponseReader.readLine();
-                    System.out.println(messageFromServer);
-                } while (!((messageFromServer.equals("BYE") || messageFromServer
-                        .equals("QUIT"))));
-
-            }
-            //-----------------clientwritingThread----------------------------
-            else if (Thread.currentThread() == clientWritingThread) {
-
-                String messageToServer;
-                do {
-                    messageToServer = clientStdin.readLine();
-                    System.out.println("msg is : " + messageToServer);
-                    clientOutputPrintWriter.println(messageToServer);
-                } while (!((messageToServer.equals("BYE") || messageToServer
-                        .equals("QUIT"))));
-            }
-            //-----------------server listener ----------------------------
-            else if (Thread.currentThread() == serverListener) {
+            if (Thread.currentThread() == serverListener) {
                 System.out.println("Please Enter the port number that you would like to listen too:");
                 serverPortNumber = 5050;
-                ServerSocket welcomingSocket = new ServerSocket(serverPortNumber);
+                ServerSocket welcomingSocket = null;
+                try{
+                    welcomingSocket = new ServerSocket(serverPortNumber);
+                }catch (Exception e) {
+                    infoBox("sorry .. please close all other instances of this program","the port is already in use");
+                    System.exit(0);
+                }
                 System.out.println("you are now listening to port [ " + serverPortNumber + " ]");
                 System.out.println("if you want to call anyone just type call");
                 console.start();
@@ -198,22 +157,19 @@ public class Client extends JFrame implements Runnable {
                             JOptionPane.YES_NO_OPTION);
                     int response = n == JOptionPane.YES_OPTION ? 1 : 2;
                     System.out.println(response);
-                    waitingInput = true;
 
                     if (response == 1 || response == 2) {
                         outFromSocketPrinter.println(response);
                         new VUServer().runVOIP(mediaServerPort);
-                        new VUClient(mediaClientPort, mediaServerPort, otherEndSocket.getInetAddress().toString()).captureAudio();
+                        new VUClient(mediaClientPort, mediaServerPort, otherEndSocket.getInetAddress().toString().substring(1)).captureAudio();
                         System.out.println(otherEndSocket.getInetAddress().toString());
-                        waitingInput = false;
                         break;
                     } else {
                         System.out.println("not a correct code ");
                     }
                 }
-
             }
-            //----------------- commands listener ----------------------------
+            //----------------- console listener ----------------------------
             else if (Thread.currentThread() == console) {
                 String msg;
                 while (true) {
@@ -221,9 +177,8 @@ public class Client extends JFrame implements Runnable {
                     if (msg.equals("call")) {
                         call();
                         break;
-                    } else if (waitingInput) {
-                        lastMsg = msg;
-                        msgModified = true;
+                    } else if (msg.equals("bye")) {
+
                     } else {
                         System.out.println("not a known command");
 
@@ -232,10 +187,6 @@ public class Client extends JFrame implements Runnable {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            /*Utilities.cleanResources(clientOutputPrintWriter, clientSocket,
-                    clientStdin, serverResponseReader);
-            System.exit(0); // Terminating !!*/
         }
     }
 }
