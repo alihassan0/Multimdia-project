@@ -119,8 +119,6 @@ public class VoipUser {
                         playThread.start();
                     } catch (Exception e) {
                         System.out.println(e);
-                        System.out.println("btngan");
-                        sourceLine.close();
                     }
                 }
             } catch (Exception e) {

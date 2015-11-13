@@ -142,7 +142,7 @@ public class Client extends JFrame implements Runnable {
                     System.out.println("user + [ " + username + " ] would like to call you ");
                     int n = JOptionPane.showConfirmDialog(
                             this,
-                            "user + [ " + username + " ] would like to call you  , Would you like to answer?",
+                            "user [ " + username + " ] would like to call you  , Would you like to answer?",
                             "incoming call",
                             JOptionPane.YES_NO_OPTION);
                     int response = n == JOptionPane.YES_OPTION ? 1 : 2;
