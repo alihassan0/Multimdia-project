@@ -27,6 +27,7 @@ public class Client extends JFrame implements Runnable {
 
     private int mediaServerPort = 9786;
     private int mediaClientPort = 8786;
+
     public static void main(String args[]) {
         new Client();
     }
@@ -71,10 +72,12 @@ public class Client extends JFrame implements Runnable {
         serverListener.start();
 
     }
+
     //just a handy function to print stuff to the screen
     public static void infoBox(String infoMessage, String titleBar) {
         JOptionPane.showMessageDialog(null, infoMessage, "InfoBox: " + titleBar, JOptionPane.INFORMATION_MESSAGE);
     }
+
     public void call() {
         try {
 
@@ -123,19 +126,18 @@ public class Client extends JFrame implements Runnable {
 
     @Override
     public void run() {
-        try {
-            if (Thread.currentThread() == serverListener) {
-                System.out.println("Please Enter the port number that you would like to listen too:");
+
+        if (Thread.currentThread() == serverListener) {
+            try {
                 serverPortNumber = 5050;
                 ServerSocket welcomingSocket = null;
-                try{
+                try {
                     welcomingSocket = new ServerSocket(serverPortNumber);
-                }catch (Exception e) {
-                    infoBox("sorry .. please close all other instances of this program","the port is already in use");
+                } catch (Exception e) {
+                    infoBox("sorry .. please close all other instances of this program", "the port is already in use");
                     System.exit(0);
                 }
-                System.out.println("you are now listening to port [ " + serverPortNumber + " ]");
-                System.out.println("if you want to call anyone just type call");
+
                 console.start();
                 while (true) {
 
@@ -158,8 +160,8 @@ public class Client extends JFrame implements Runnable {
                     int response = n == JOptionPane.YES_OPTION ? 1 : 2;
                     System.out.println(response);
 
-                    if (response == 1 || response == 2) {
-                        outFromSocketPrinter.println(response);
+                    outFromSocketPrinter.println(response);
+                    if (response == 1) {
                         new VUServer().runVOIP(mediaServerPort);
                         new VUClient(mediaClientPort, mediaServerPort, otherEndSocket.getInetAddress().toString().substring(1)).captureAudio();
                         System.out.println(otherEndSocket.getInetAddress().toString());
@@ -168,9 +170,14 @@ public class Client extends JFrame implements Runnable {
                         System.out.println("not a correct code ");
                     }
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+                infoBox("listener error", "error");
             }
-            //----------------- console listener ----------------------------
-            else if (Thread.currentThread() == console) {
+        }
+        //----------------- console listener ----------------------------
+        else if (Thread.currentThread() == console) {
+            try{
                 String msg;
                 while (true) {
                     msg = connectionInfoReader.readLine().trim();
@@ -184,9 +191,12 @@ public class Client extends JFrame implements Runnable {
 
                     }
                 }
+            }catch (IOException e){
+                e.printStackTrace();
+                infoBox("console error","error");
+
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+
     }
 }
